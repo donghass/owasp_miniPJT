@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}게시물 관리{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="split">
+    <div>
+      <p class="eyebrow">Admin Posts</p>
+      <h2>게시물 관리</h2>
+    </div>
+    <a class="btn btn-subtle" href="{{ url_for('admin_dashboard') }}">대시보드</a>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>작성일</th><th>상세</th></tr></thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td>{{ post.id }}</td>
+          <td class="text-wrap">{{ post.title }}</td>
+          <td>{{ post.author.username }}</td>
+          <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td><a class="btn btn-subtle" href="{{ url_for('posts_detail', post_id=post.id) }}">열기</a></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-wrap">게시물이 없습니다.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

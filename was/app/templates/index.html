@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}메인 | 공공 의료 민원 포털{% endblock %}
+
+{% block hero %}
+<section class="hero">
+  <p class="eyebrow">Public Health Service</p>
+  <h1>민원, 공지, 커뮤니티를 하나로 관리하는 통합 포털</h1>
+  <p>사용자와 관리자가 같은 시스템 안에서 민원을 접수하고 처리 상태를 추적할 수 있도록 설계된 3티어 웹서비스입니다.</p>
+  <div class="hero-actions">
+    <a class="btn" href="{{ url_for('complaints_new') if current_user.is_authenticated else url_for('login') }}">민원 접수하기</a>
+    <a class="btn btn-outline" href="{{ url_for('posts_list') }}">게시판 바로가기</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-3">
+  <section class="quick-stat">
+    <span class="small">서비스 구분</span>
+    <b>의료/공공 민원</b>
+  </section>
+  <section class="quick-stat">
+    <span class="small">아키텍처</span>
+    <b>Web · WAS · DB</b>
+  </section>
+  <section class="quick-stat">
+    <span class="small">관리 기능</span>
+    <b>계정/공지/민원</b>
+  </section>
+</div>
+
+<div class="grid grid-2">
+  <section class="card">
+    <div class="split">
+      <h3>최근 공지사항</h3>
+      <a class="btn btn-subtle" href="{{ url_for('notices_list') }}">전체 보기</a>
+    </div>
+    {% if latest_notices %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>제목</th><th>작성일</th></tr></thead>
+          <tbody>
+            {% for notice in latest_notices %}
+            <tr>
+              <td class="text-wrap"><a href="{{ url_for('notices_detail', notice_id=notice.id) }}">{{ notice.title }}</a></td>
+              <td>{{ notice.created_at.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">등록된 공지가 없습니다.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="split">
+      <h3>최근 게시물</h3>
+      <a class="btn btn-subtle" href="{{ url_for('posts_list') }}">전체 보기</a>
+    </div>
+    {% if latest_posts %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>제목</th><th>작성자</th></tr></thead>
+          <tbody>
+            {% for post in latest_posts %}
+            <tr>
+              <td class="text-wrap"><a href="{{ url_for('posts_detail', post_id=post.id) }}">{{ post.title }}</a></td>
+              <td>{{ post.author.username }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">등록된 게시물이 없습니다.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

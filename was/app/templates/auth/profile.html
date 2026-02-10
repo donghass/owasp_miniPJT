@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}마이페이지{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+  <section class="card">
+    <p class="eyebrow">Account</p>
+    <h2>내 계정 정보</h2>
+    <p><strong>아이디</strong> {{ current_user.username }}</p>
+    <p><strong>이메일</strong> {{ current_user.email }}</p>
+    <p><strong>권한</strong> {{ current_user.role }}</p>
+    <p class="small">생성일 {{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+  </section>
+
+  <section class="card">
+    <p class="eyebrow">Profile</p>
+    <h2>프로필 수정</h2>
+    <form class="form" method="post">
+      <label>이름<input name="full_name" value="{{ current_user.full_name }}" required></label>
+      <label>연락처<input name="phone" value="{{ current_user.phone }}" required></label>
+      <button type="submit">저장</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
