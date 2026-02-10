@@ -170,6 +170,21 @@
 - When: `/admin/complaints` 접근
 - Then: 전체 민원 표시
 
+### TC-ADMIN-05 사용자 관리 검색/필터
+- Given: 관리자 로그인, 사용자 데이터 존재
+- When: `/admin/users?q=user&role=user` 접근
+- Then: 조건에 맞는 계정만 표시
+
+### TC-ADMIN-06 게시물 관리 검색/페이지네이션
+- Given: 관리자 로그인, 게시물 다수 존재
+- When: `/admin/posts?q=진료&page=1` 접근
+- Then: 검색 결과와 페이지 정보 표시
+
+### TC-ADMIN-07 민원 관리 필터/페이지네이션
+- Given: 관리자 로그인, 상태/카테고리별 민원 존재
+- When: `/admin/complaints?status=received&category=general&page=1` 접근
+- Then: 필터링된 민원 목록 표시
+
 ### TC-LOG-01 로그인 로그
 - Given: 사용자가 로그인 수행
 - When: 관리자 `/admin` 진입
@@ -189,6 +204,16 @@
 - Given: 임의 URL
 - When: `/not-found-example` 접근
 - Then: 404 응답
+
+### TC-SEC-01 OWASP 시나리오 목록 접근(관리자)
+- Given: 관리자 로그인
+- When: `/security/scenarios` 접근
+- Then: A01~A10 목록 렌더링
+
+### TC-SEC-02 OWASP 시나리오 접근 차단(일반 사용자)
+- Given: 일반 사용자 로그인
+- When: `/security/scenarios` 접근
+- Then: 접근 거부(redirect)
 
 ### TC-OPS-01 3티어 계층 기동
 - Given: Docker 환경 정상

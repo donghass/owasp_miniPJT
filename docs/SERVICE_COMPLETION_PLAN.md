@@ -20,6 +20,7 @@
 - `/notices`, `/notices/{id}`
 - `/complaints`, `/complaints/new`, `/complaints/{id}`
 - `/admin`, `/admin/users`, `/admin/posts`, `/admin/notices`, `/admin/complaints`
+- `/security/scenarios`, `/security/scenarios/{id}`
 
 합격 기준.
 - 200 또는 의도된 redirect
@@ -35,6 +36,7 @@
 - 민원 접수/상태변경
 - 사용자 role 변경
 - 감사로그 표시
+- OWASP A01~A10 시나리오 페이지 열람(관리자)
 
 합격 기준.
 - DB에 실제 반영

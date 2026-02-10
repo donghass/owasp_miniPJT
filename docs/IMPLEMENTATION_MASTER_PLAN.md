@@ -44,6 +44,8 @@ Out of Scope.
   - `docs/FEATURE_MATRIX.md`
   - `docs/API_SPEC.md`
   - `docs/TEST_CASES.md`
+  - `docs/OWASP_SCENARIOS.md`
+  - `docs/TEST_RESULTS.md`
   - `docs/SERVICE_COMPLETION_PLAN.md`
   - `docs/DB_SCHEMA_AND_SEED.md`
   - `docs/UNSUPPORTED_AND_SECURITY_NOTE.md`

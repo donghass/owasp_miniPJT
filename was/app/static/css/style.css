@@ -325,6 +325,23 @@ button:hover {
   flex-wrap: wrap;
 }
 
+.pagination {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.card ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+}
+
+.card li {
+  margin-bottom: 6px;
+}
+
 .table-wrap {
   overflow-x: auto;
 }

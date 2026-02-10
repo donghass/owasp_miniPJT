@@ -26,6 +26,8 @@
 | FR-012 | 게시물 관리 화면 | P1 | `/admin/posts` | `was/app/routes.py`, `was/app/templates/admin/posts.html` | TC-ADMIN-03 | 목록/상세 이동 가능 |
 | FR-013 | 민원 관리 화면 | P1 | `/admin/complaints` | `was/app/routes.py`, `was/app/templates/admin/complaints.html` | TC-ADMIN-04 | 전체 민원 조회 가능 |
 | FR-014 | 감사 로그 기록 | P0 | 주요 액션 공통 | `was/app/routes.py`, `was/app/models.py` | TC-LOG-01,02,03 | 로그인/수정/관리 액션 저장 |
+| FR-015 | 관리자 검색/필터/페이지네이션 | P1 | `/admin/users`, `/admin/posts`, `/admin/notices`, `/admin/complaints` | `was/app/routes.py`, `was/app/templates/admin/*` | TC-ADMIN-05,06,07 | 검색조건 반영 및 페이지 이동 가능 |
+| FR-016 | OWASP 시나리오 페이지 | P1 | `/security/scenarios`, `/security/scenarios/{id}` | `was/app/routes.py`, `was/app/security_catalog.py`, `was/app/templates/security/*` | TC-SEC-01,02 | A01~A10 시나리오 열람 및 권한 통제 |
 | NFR-001 | 3티어 구조 | P0 | web-was-db 분리 | `docker-compose.yml`, `web/nginx.conf` | TC-OPS-01 | 계층 분리 기동 |
 | NFR-002 | 데이터 영속성 | P1 | MariaDB volume | `docker-compose.yml` | TC-OPS-02 | 컨테이너 재기동 후 데이터 유지 |
 | NFR-003 | 기본 운영 문서 | P0 | 실행/테스트/완성계획 | `README.md`, `docs/*` | TC-DOC-01 | 신규 인원이 문서만으로 실행 가능 |

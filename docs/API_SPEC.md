@@ -186,6 +186,7 @@
 - 권한: Admin
 - 목적: 사용자 권한 관리 화면
 - 성공: `200`, `admin/users.html`
+- Query: `q`, `role`, `page`
 
 ### `POST /admin/users`
 - 권한: Admin
@@ -199,11 +200,13 @@
 - 권한: Admin
 - 목적: 게시물 관리 화면
 - 성공: `200`, `admin/posts.html`
+- Query: `q`, `page`
 
 ### `GET /admin/notices`
 - 권한: Admin
 - 목적: 공지 관리 화면
 - 성공: `200`, `admin/notices.html`
+- Query: `q`, `visibility`, `page`
 
 ### `POST /admin/notices`
 - 권한: Admin
@@ -223,6 +226,18 @@
 - 권한: Admin
 - 목적: 민원 관리 목록
 - 성공: `200`, `admin/complaints.html`
+- Query: `q`, `status`, `category`, `page`
+
+### `GET /security/scenarios`
+- 권한: Admin
+- 목적: OWASP Top 10 시나리오 목록
+- 성공: `200`, `security/list.html`
+
+### `GET /security/scenarios/{scenario_id}`
+- 권한: Admin
+- 목적: OWASP 항목별 상세 점검 페이지
+- 성공: `200`, `security/detail.html`
+- 실패: `404`
 
 ## 5. 라우트/템플릿 매핑
 

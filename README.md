@@ -54,6 +54,12 @@ pip install -r requirements-dev.txt
 PYTHONPATH=/Users/sangwoolee/PJT2/was pytest -q
 ```
 
+테스트 결과 문서 자동 생성.
+
+```bash
+/Users/sangwoolee/PJT2/scripts/generate_test_report.sh
+```
+
 ## 4) 문서 인덱스
 
 - 구현 마스터 플랜: `docs/IMPLEMENTATION_MASTER_PLAN.md`
@@ -61,7 +67,9 @@ PYTHONPATH=/Users/sangwoolee/PJT2/was pytest -q
 - 요구사항 추적 매트릭스: `docs/FEATURE_MATRIX.md`
 - API 명세: `docs/API_SPEC.md`
 - 테스트 케이스: `docs/TEST_CASES.md`
+- 테스트 결과: `docs/TEST_RESULTS.md`
 - DB 스키마/시드: `docs/DB_SCHEMA_AND_SEED.md`
+- OWASP 시나리오: `docs/OWASP_SCENARIOS.md`
 - 정책상 제한 사항: `docs/UNSUPPORTED_AND_SECURITY_NOTE.md`
 
 ## 5) 제출 전 체크
