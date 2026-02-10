@@ -1,21 +1,64 @@
+import json
 from functools import wraps
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import func, or_
 
 from app import db
-from app.models import AuditLog, Complaint, Notice, Post, User
+from app.health_content import HEALTH_FAQ, HEALTH_NEWS, HEALTH_PROGRAMS, REGIONAL_CENTERS
+from app.models import AuditLog, Complaint, MyDataSnapshot, Notice, Post, User, utc_now
+from app.mydata_mock import generate_mock_medical_mydata
 from app.security_catalog import OWASP_TOP10_SCENARIOS
 from app.validators import (
     COMPLAINT_CATEGORY_SET,
     COMPLAINT_STATUS_SET,
+    POST_CATEGORY_SET,
     validate_complaint_category,
     validate_complaint_status,
+    validate_post_category,
     validate_profile,
     validate_registration,
     validate_role,
     validate_title_and_content,
 )
+
+POST_CATEGORY_LABELS = {
+    "general": "일반 문의",
+    "medical_service": "진료 서비스",
+    "insurance_billing": "보험/비용",
+    "privacy_records": "개인정보/의무기록",
+    "facility_access": "시설/접근성",
+    "vaccination": "예방접종",
+    "digital_service": "디지털 서비스",
+}
+
+COMPLAINT_CATEGORY_LABELS = {
+    "general": "일반 행정",
+    "medical": "진료 서비스",
+    "billing": "보험/진료비",
+    "privacy": "개인정보/의무기록",
+    "facility_access": "시설/접근성",
+    "vaccination": "예방접종",
+    "digital_service": "디지털 서비스",
+}
+
+LOG_EVENT_OPTIONS = {
+    "login",
+    "login_failed",
+    "logout",
+    "profile_update",
+    "post_create",
+    "post_update",
+    "post_delete",
+    "complaint_create",
+    "complaint_status_update",
+    "notice_create",
+    "notice_toggle_publish",
+    "user_role_update",
+    "web_request",
+    "mydata_fetch",
+}
 
 
 def admin_required(func):
@@ -29,16 +72,23 @@ def admin_required(func):
     return wrapped
 
 
-def log_action(action, target_type=None, target_id=None, meta=None):
+def log_action(action, target_type=None, target_id=None, meta=None, actor_id=None):
     entry = AuditLog(
-        actor_id=current_user.id if current_user.is_authenticated else None,
+        actor_id=(
+            actor_id
+            if actor_id is not None
+            else (current_user.id if current_user.is_authenticated else None)
+        ),
         action=action,
         target_type=target_type,
         target_id=str(target_id) if target_id else None,
         meta=meta,
     )
-    db.session.add(entry)
-    db.session.commit()
+    try:
+        db.session.add(entry)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def flash_errors(errors):
@@ -52,11 +102,68 @@ def parse_page(default=1):
 
 
 def init_routes(app):
+    @app.after_request
+    def capture_web_request(response):
+        endpoint = request.endpoint or ""
+        if endpoint == "static" or request.path.startswith("/static/"):
+            return response
+
+        forwarded_for = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        client_ip = forwarded_for or request.remote_addr or "-"
+        user_agent = request.user_agent.string if request.user_agent else "-"
+        query_string = request.query_string.decode("utf-8", errors="ignore")
+        meta = (
+            f"status={response.status_code};endpoint={endpoint or '-'};"
+            f"ip={client_ip};query={query_string[:120]};ua={user_agent[:140]}"
+        )
+        log_action(
+            "web_request",
+            target_type=request.method,
+            target_id=(request.path or "-")[:50],
+            meta=meta,
+            actor_id=current_user.id if current_user.is_authenticated else None,
+        )
+        return response
+
     @app.route("/")
     def index():
         latest_notices = Notice.query.filter_by(is_published=True).order_by(Notice.created_at.desc()).limit(5).all()
         latest_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
-        return render_template("index.html", latest_notices=latest_notices, latest_posts=latest_posts)
+        highlighted_programs = HEALTH_PROGRAMS[:2]
+        return render_template(
+            "index.html",
+            latest_notices=latest_notices,
+            latest_posts=latest_posts,
+            health_news=HEALTH_NEWS[:3],
+            highlighted_programs=highlighted_programs,
+            post_category_labels=POST_CATEGORY_LABELS,
+        )
+
+    @app.route("/health-info")
+    def health_info():
+        return render_template(
+            "health/info.html",
+            health_news=HEALTH_NEWS,
+            health_programs=HEALTH_PROGRAMS,
+            health_faq=HEALTH_FAQ,
+        )
+
+    @app.route("/health-centers")
+    def health_centers():
+        return render_template(
+            "health/centers.html",
+            centers=REGIONAL_CENTERS,
+        )
+
+    @app.route("/health-programs/<string:program_id>")
+    def health_program_detail(program_id):
+        program = next((item for item in HEALTH_PROGRAMS if item["id"] == program_id), None)
+        if program is None:
+            abort(404)
+        return render_template(
+            "health/program_detail.html",
+            program=program,
+        )
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -104,6 +211,9 @@ def init_routes(app):
                 flash("로그인 성공", "success")
                 return redirect(url_for("index"))
 
+            attempted_id = username[:50] if username else None
+            client_ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or request.remote_addr or "-"
+            log_action("login_failed", "user", attempted_id, meta=f"ip={client_ip}", actor_id=None)
             flash("아이디 또는 비밀번호가 잘못되었습니다.", "danger")
 
         return render_template("auth/login.html")
@@ -134,12 +244,79 @@ def init_routes(app):
             flash("프로필이 수정되었습니다.", "success")
             return redirect(url_for("profile"))
 
-        return render_template("auth/profile.html")
+        snapshot = (
+            MyDataSnapshot.query.filter_by(user_id=current_user.id)
+            .order_by(MyDataSnapshot.fetched_at.desc(), MyDataSnapshot.id.desc())
+            .first()
+        )
+        mydata = None
+        if snapshot:
+            try:
+                mydata = json.loads(snapshot.payload_json)
+            except json.JSONDecodeError:
+                mydata = None
+        return render_template(
+            "auth/profile.html",
+            mydata_snapshot=snapshot,
+            mydata=mydata,
+        )
+
+    @app.route("/profile/mydata/fetch", methods=["POST"])
+    @login_required
+    def profile_mydata_fetch():
+        consent_given = request.form.get("consent_mydata") == "on"
+        if not consent_given:
+            flash("의료 마이데이터 불러오기 전에 수집/이용 동의가 필요합니다.", "danger")
+            return redirect(url_for("profile"))
+
+        payload = generate_mock_medical_mydata(current_user)
+        snapshot = MyDataSnapshot(
+            user_id=current_user.id,
+            source="MOCK",
+            consent_given=True,
+            consent_at=utc_now(),
+            payload_json=json.dumps(payload, ensure_ascii=False),
+            fetched_at=utc_now(),
+        )
+        db.session.add(snapshot)
+        db.session.commit()
+        log_action("mydata_fetch", "mydata", snapshot.id, meta="source=MOCK")
+        flash("의료 마이데이터를 불러왔습니다. (목데이터)", "success")
+        return redirect(url_for("profile"))
 
     @app.route("/posts")
     def posts_list():
-        posts = Post.query.order_by(Post.created_at.desc()).all()
-        return render_template("posts/list.html", posts=posts)
+        q = request.args.get("q", "").strip()
+        category = request.args.get("category", "all")
+        query = Post.query.join(User, Post.user_id == User.id)
+
+        if q:
+            keyword = f"%{q}%"
+            query = query.filter(
+                (Post.title.ilike(keyword))
+                | (Post.content.ilike(keyword))
+                | (User.username.ilike(keyword))
+            )
+
+        if category in POST_CATEGORY_SET:
+            query = query.filter(Post.category == category)
+        else:
+            category = "all"
+
+        pagination = query.order_by(Post.created_at.desc()).paginate(
+            page=parse_page(),
+            per_page=10,
+            error_out=False,
+        )
+        return render_template(
+            "posts/list.html",
+            posts=pagination.items,
+            pagination=pagination,
+            q=q,
+            category=category,
+            category_options=sorted(POST_CATEGORY_SET),
+            post_category_labels=POST_CATEGORY_LABELS,
+        )
 
     @app.route("/posts/new", methods=["GET", "POST"])
     @login_required
@@ -147,17 +324,28 @@ def init_routes(app):
         if request.method == "POST":
             title = request.form.get("title", "").strip()
             content = request.form.get("content", "").strip()
+            category = request.form.get("category", "general").strip()
             errors = validate_title_and_content(title, content)
+            errors.extend(validate_post_category(category))
             if errors:
                 flash_errors(errors)
                 return redirect(url_for("posts_new"))
-            post = Post(title=title, content=content, user_id=current_user.id)
+            post = Post(
+                title=title,
+                content=content,
+                category=category,
+                user_id=current_user.id,
+            )
             db.session.add(post)
             db.session.commit()
             log_action("post_create", "post", post.id)
             flash("게시물이 등록되었습니다.", "success")
             return redirect(url_for("posts_list"))
-        return render_template("posts/new.html")
+        return render_template(
+            "posts/new.html",
+            category_options=sorted(POST_CATEGORY_SET),
+            post_category_labels=POST_CATEGORY_LABELS,
+        )
 
     @app.route("/posts/<int:post_id>", methods=["GET", "POST"])
     def posts_detail(post_id):
@@ -173,19 +361,27 @@ def init_routes(app):
 
             title = request.form.get("title", post.title).strip()
             content = request.form.get("content", post.content).strip()
+            category = request.form.get("category", post.category).strip()
             errors = validate_title_and_content(title, content)
+            errors.extend(validate_post_category(category))
             if errors:
                 flash_errors(errors)
                 return redirect(url_for("posts_detail", post_id=post_id))
 
             post.title = title
             post.content = content
+            post.category = category
             db.session.commit()
             log_action("post_update", "post", post.id)
             flash("게시물이 수정되었습니다.", "success")
             return redirect(url_for("posts_detail", post_id=post.id))
 
-        return render_template("posts/detail.html", post=post)
+        return render_template(
+            "posts/detail.html",
+            post=post,
+            category_options=sorted(POST_CATEGORY_SET),
+            post_category_labels=POST_CATEGORY_LABELS,
+        )
 
     @app.route("/posts/<int:post_id>/delete", methods=["POST"])
     @login_required
@@ -224,7 +420,11 @@ def init_routes(app):
             complaints = Complaint.query.order_by(Complaint.created_at.desc()).all()
         else:
             complaints = Complaint.query.filter_by(user_id=current_user.id).order_by(Complaint.created_at.desc()).all()
-        return render_template("complaints/list.html", complaints=complaints)
+        return render_template(
+            "complaints/list.html",
+            complaints=complaints,
+            complaint_category_labels=COMPLAINT_CATEGORY_LABELS,
+        )
 
     @app.route("/complaints/new", methods=["GET", "POST"])
     @login_required
@@ -277,7 +477,11 @@ def init_routes(app):
             flash("민원 상태가 변경되었습니다.", "success")
             return redirect(url_for("complaints_detail", complaint_id=complaint_id))
 
-        return render_template("complaints/detail.html", complaint=complaint)
+        return render_template(
+            "complaints/detail.html",
+            complaint=complaint,
+            complaint_category_labels=COMPLAINT_CATEGORY_LABELS,
+        )
 
     @app.route("/admin")
     @login_required
@@ -288,9 +492,24 @@ def init_routes(app):
             "posts": Post.query.count(),
             "notices": Notice.query.count(),
             "complaints": Complaint.query.count(),
+            "complaints_pending": Complaint.query.filter(
+                Complaint.status.in_(["received", "in_review"])
+            ).count(),
         }
+        complaint_category_stats = (
+            db.session.query(Complaint.category, func.count(Complaint.id))
+            .group_by(Complaint.category)
+            .order_by(func.count(Complaint.id).desc())
+            .all()
+        )
         logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(20).all()
-        return render_template("admin/dashboard.html", stats=stats, logs=logs)
+        return render_template(
+            "admin/dashboard.html",
+            stats=stats,
+            logs=logs,
+            complaint_category_stats=complaint_category_stats,
+            complaint_category_labels=COMPLAINT_CATEGORY_LABELS,
+        )
 
     @app.route("/admin/users", methods=["GET", "POST"])
     @login_required
@@ -444,6 +663,7 @@ def init_routes(app):
     @admin_required
     def admin_posts():
         q = request.args.get("q", "").strip()
+        category_filter = request.args.get("category", "all")
         query = Post.query.join(User, Post.user_id == User.id)
         if q:
             keyword = f"%{q}%"
@@ -452,6 +672,10 @@ def init_routes(app):
                 | (Post.content.ilike(keyword))
                 | (User.username.ilike(keyword))
             )
+        if category_filter in POST_CATEGORY_SET:
+            query = query.filter(Post.category == category_filter)
+        else:
+            category_filter = "all"
 
         pagination = query.order_by(Post.created_at.desc()).paginate(
             page=parse_page(),
@@ -463,6 +687,56 @@ def init_routes(app):
             posts=pagination.items,
             pagination=pagination,
             q=q,
+            category_filter=category_filter,
+            category_options=sorted(POST_CATEGORY_SET),
+            post_category_labels=POST_CATEGORY_LABELS,
+        )
+
+    @app.route("/admin/logs")
+    @login_required
+    @admin_required
+    def admin_logs():
+        q = request.args.get("q", "").strip()
+        event_filter = request.args.get("event", "all").strip()
+        method_filter = request.args.get("method", "all").upper().strip()
+
+        query = AuditLog.query.outerjoin(User, AuditLog.actor_id == User.id)
+        if q:
+            keyword = f"%{q}%"
+            query = query.filter(
+                or_(
+                    AuditLog.action.ilike(keyword),
+                    AuditLog.target_type.ilike(keyword),
+                    AuditLog.target_id.ilike(keyword),
+                    AuditLog.meta.ilike(keyword),
+                    User.username.ilike(keyword),
+                )
+            )
+        if event_filter in LOG_EVENT_OPTIONS:
+            query = query.filter(AuditLog.action == event_filter)
+        else:
+            event_filter = "all"
+
+        method_options = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        if method_filter in method_options:
+            query = query.filter(AuditLog.target_type == method_filter)
+        else:
+            method_filter = "all"
+
+        pagination = query.order_by(AuditLog.created_at.desc()).paginate(
+            page=parse_page(),
+            per_page=20,
+            error_out=False,
+        )
+        return render_template(
+            "admin/logs.html",
+            logs=pagination.items,
+            pagination=pagination,
+            q=q,
+            event_filter=event_filter,
+            event_options=sorted(LOG_EVENT_OPTIONS),
+            method_filter=method_filter,
+            method_options=method_options,
         )
 
     @app.route("/admin/complaints")
@@ -500,6 +774,7 @@ def init_routes(app):
             category_filter=category_filter,
             status_options=sorted(COMPLAINT_STATUS_SET),
             category_options=sorted(COMPLAINT_CATEGORY_SET),
+            complaint_category_labels=COMPLAINT_CATEGORY_LABELS,
         )
 
     @app.route("/security/scenarios")

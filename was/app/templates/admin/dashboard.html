@@ -18,6 +18,26 @@
 </div>
 
 <div class="card">
+  <h3>민원 처리 현황</h3>
+  <p><strong>미처리/검토중 건수:</strong> {{ stats.complaints_pending }}</p>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>카테고리</th><th>건수</th></tr></thead>
+      <tbody>
+        {% for category, count in complaint_category_stats %}
+        <tr>
+          <td>{{ complaint_category_labels.get(category, category) }}</td>
+          <td>{{ count }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2">집계할 민원이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
   <div class="split">
     <h3>관리 메뉴</h3>
     <span class="small">운영 작업 바로가기</span>
@@ -27,12 +47,16 @@
     <a class="btn" href="{{ url_for('admin_posts') }}">게시물 관리</a>
     <a class="btn" href="{{ url_for('admin_notices') }}">공지 관리</a>
     <a class="btn" href="{{ url_for('admin_complaints') }}">민원 관리</a>
+    <a class="btn" href="{{ url_for('admin_logs') }}">로그 모니터링</a>
     <a class="btn" href="{{ url_for('security_scenarios') }}">OWASP 시나리오</a>
   </div>
 </div>
 
 <div class="card">
-  <h3>최근 감사 로그</h3>
+  <div class="split">
+    <h3>최근 감사 로그</h3>
+    <a class="btn btn-subtle" href="{{ url_for('admin_logs') }}">전체 로그 보기</a>
+  </div>
   <div class="table-wrap">
     <table class="table">
       <thead><tr><th>시간</th><th>행동</th><th>대상</th><th>ID</th><th>메타</th></tr></thead>

@@ -325,6 +325,23 @@ button:hover {
   flex-wrap: wrap;
 }
 
+.checkline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.checkline input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.mydata-kpi {
+  min-height: 96px;
+}
+
 .pagination {
   margin-top: 12px;
   display: flex;
@@ -462,6 +479,176 @@ button:hover {
   padding: 18px 0 24px;
 }
 
+/* Progress Stepper */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 24px 0;
+  position: relative;
+}
+
+.stepper::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 60px;
+  right: 60px;
+  height: 3px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.stepper-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--muted);
+  transition: all 0.3s ease;
+}
+
+.stepper-step.completed .stepper-icon {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+
+.stepper-step.active .stepper-icon {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.stepper-step.rejected .stepper-icon {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(15, 118, 110, 0.1); }
+}
+
+.stepper-label {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.stepper-step.completed .stepper-label,
+.stepper-step.active .stepper-label {
+  color: var(--text);
+}
+
+.stepper-step.rejected .stepper-label {
+  color: var(--danger);
+}
+
+.stepper-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.stepper-step.completed .stepper-date,
+.stepper-step.active .stepper-date {
+  color: var(--brand);
+}
+
+/* Connector line progress */
+.stepper-connector {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--ok);
+  z-index: 0;
+  transition: width 0.5s ease;
+}
+
+.stepper-step.completed .stepper-connector {
+  width: 100%;
+}
+
+.stepper-step.rejected .stepper-connector {
+  background: var(--danger);
+  width: 100%;
+}
+
+.stepper-step:last-child .stepper-connector {
+  display: none;
+}
+
+/* Status summary card */
+.status-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.status-summary-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.status-summary-icon.received {
+  background: #dcfce7;
+}
+
+.status-summary-icon.in_review {
+  background: #fef9c3;
+}
+
+.status-summary-icon.resolved {
+  background: #dbeafe;
+}
+
+.status-summary-icon.rejected {
+  background: #fee2e2;
+}
+
+.status-summary-text h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.status-summary-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 @media (max-width: 780px) {
   .nav {
     align-items: flex-start;
@@ -480,5 +667,40 @@ button:hover {
   .table th,
   .table td {
     font-size: 0.86rem;
+  }
+
+  .stepper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .stepper::before {
+    top: 0;
+    bottom: 0;
+    left: 20px;
+    right: auto;
+    width: 3px;
+    height: auto;
+  }
+
+  .stepper-step {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+  }
+
+  .stepper-step .stepper-connector {
+    display: none;
+  }
+
+  .stepper-label {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .stepper-date {
+    margin-top: 2px;
   }
 }

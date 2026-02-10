@@ -22,7 +22,8 @@
 ### 목표 정책 (권장)
 - `title`: 1~200자
 - `content`: 1자 이상
-- `complaint.category`: `general|medical|privacy|billing`
+- `post.category`: `general|medical_service|insurance_billing|privacy_records|facility_access|vaccination|digital_service`
+- `complaint.category`: `general|medical|privacy|billing|facility_access|vaccination|digital_service`
 - `complaint.status`: `received|in_review|resolved|rejected`
 - `role`: `user|admin`
 
@@ -66,7 +67,7 @@
 - 목적: 로그인 처리
 - 요청 필드: `username`, `password`
 - 성공: `302 /`, 세션 생성, `audit_log` 기록
-- 실패: `200 또는 302`, flash `danger`
+- 실패: `200 또는 302`, flash `danger`, `login_failed` 로그 기록
 
 ### `GET /logout`
 - 권한: Authenticated
@@ -85,12 +86,21 @@
 - 성공: `302 /profile`, flash `success`
 - DB 영향: `user` 갱신, `audit_log` 기록
 
+### `POST /profile/mydata/fetch`
+- 권한: Authenticated
+- 목적: 의료 마이데이터(목데이터) 불러오기
+- 요청 필드: `consent_mydata=on` (동의 체크)
+- 성공: `302 /profile`, flash `success`
+- 실패: `302 /profile`, flash `danger` (동의 누락)
+- DB 영향: `my_data_snapshot` 생성, `audit_log` 기록(`mydata_fetch`)
+
 ## 4.2 게시판
 
 ### `GET /posts`
 - 권한: Public
 - 목적: 게시물 목록 조회
 - 성공: `200`, `posts/list.html`
+- Query: `q`, `category`, `page`
 
 ### `GET /posts/new`
 - 권한: Authenticated
@@ -100,7 +110,7 @@
 ### `POST /posts/new`
 - 권한: Authenticated
 - 목적: 글 작성
-- 요청 필드: `title`, `content`
+- 요청 필드: `title`, `content`, `category`
 - 성공: `302 /posts`, flash `success`
 - 실패: `302 /posts/new`, flash `danger`
 - DB 영향: `post` 생성, `audit_log` 기록
@@ -114,7 +124,7 @@
 ### `POST /posts/{post_id}`
 - 권한: 작성자 또는 관리자
 - 목적: 게시물 수정
-- 요청 필드: `title`, `content`
+- 요청 필드: `title`, `content`, `category`
 - 성공: `302 /posts/{post_id}`, flash `success`
 - 실패: `302`, flash `danger`
 - DB 영향: `post` 갱신, `audit_log` 기록
@@ -200,7 +210,34 @@
 - 권한: Admin
 - 목적: 게시물 관리 화면
 - 성공: `200`, `admin/posts.html`
-- Query: `q`, `page`
+- Query: `q`, `category`, `page`
+
+### `GET /admin/logs`
+- 권한: Admin
+- 목적: 로그인 이력/웹 요청 포함 감사 로그 조회
+- 성공: `200`, `admin/logs.html`
+- Query: `q`, `event`, `method`, `page`
+- 비고:
+  - `event=login|login_failed|logout|web_request|...`
+  - `method=GET|POST|PUT|PATCH|DELETE` (주로 `web_request` 필터용)
+
+## 4.6 공공 의료 정보
+
+### `GET /health-info`
+- 권한: Public
+- 목적: 공공 의료 소식/지원사업/FAQ 통합 조회
+- 성공: `200`, `health/info.html`
+
+### `GET /health-centers`
+- 권한: Public
+- 목적: 지역 공공의료 연계센터 조회
+- 성공: `200`, `health/centers.html`
+
+### `GET /health-programs/{program_id}`
+- 권한: Public
+- 목적: 지원사업 상세 안내
+- 성공: `200`, `health/program_detail.html`
+- 실패: `404`
 
 ### `GET /admin/notices`
 - 권한: Admin
@@ -230,14 +267,16 @@
 
 ### `GET /security/scenarios`
 - 권한: Admin
-- 목적: OWASP Top 10 시나리오 목록
+- 목적: OWASP Top 10:2025 시나리오 목록
 - 성공: `200`, `security/list.html`
+- 항목: A01~A10 (2025 버전)
 
 ### `GET /security/scenarios/{scenario_id}`
 - 권한: Admin
-- 목적: OWASP 항목별 상세 점검 페이지
+- 목적: OWASP Top 10:2025 항목별 상세 점검 페이지
 - 성공: `200`, `security/detail.html`
 - 실패: `404`
+- 시나리오 ID: `a01`~`a10`
 
 ## 5. 라우트/템플릿 매핑
 
@@ -246,6 +285,7 @@
 - `/login` -> `auth/login.html`
 - `/profile` -> `auth/profile.html`
 - `/posts*` -> `posts/*`
+- `/health-info`, `/health-centers`, `/health-programs/*` -> `health/*`
 - `/notices*` -> `notices/*`
 - `/complaints*` -> `complaints/*`
 - `/admin*` -> `admin/*`

@@ -17,6 +17,8 @@
         <strong>공공 의료 민원 포털</strong>
       </a>
       <nav class="nav-links">
+        <a class="nav-link" href="{{ url_for('health_info') }}">의료정보</a>
+        <a class="nav-link" href="{{ url_for('health_centers') }}">지역센터</a>
         <a class="nav-link" href="{{ url_for('posts_list') }}">게시판</a>
         <a class="nav-link" href="{{ url_for('notices_list') }}">공지사항</a>
         {% if current_user.is_authenticated %}
@@ -24,6 +26,7 @@
           <a class="nav-link" href="{{ url_for('profile') }}">마이페이지</a>
           {% if current_user.role == 'admin' %}
             <a class="nav-link" href="{{ url_for('admin_dashboard') }}">관리자</a>
+            <a class="nav-link" href="{{ url_for('admin_logs') }}">로그 모니터링</a>
             <a class="nav-link" href="{{ url_for('security_scenarios') }}">OWASP 시나리오</a>
           {% endif %}
           <a class="nav-link" href="{{ url_for('logout') }}">로그아웃</a>

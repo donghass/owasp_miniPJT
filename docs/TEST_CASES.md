@@ -88,6 +88,11 @@
 - When: `/profile`에서 이름/연락처 수정
 - Then: 수정값 반영, 성공 메시지
 
+### TC-PROF-02 의료 마이데이터 불러오기
+- Given: 로그인 상태
+- When: `/profile`에서 동의 체크 후 `내 의료데이터 불러오기` 실행
+- Then: 마이페이지에 진료/복약/검진 목데이터가 렌더링된다
+
 ### TC-POST-01 게시물 생성
 - Given: 로그인 상태
 - When: `/posts/new` 작성
@@ -112,6 +117,11 @@
 - Given: 타인 게시물 존재, 관리자 로그인
 - When: `/posts/{id}` POST
 - Then: 수정 성공
+
+### TC-POST-06 게시물 분류 필터
+- Given: 서로 다른 분류의 게시물 존재
+- When: `/posts?category=digital_service` 접근
+- Then: 해당 분류 게시물만 목록에 표시
 
 ### TC-NOTI-01 공지 사용자 목록
 - Given: 공개/비공개 공지 존재
@@ -200,20 +210,46 @@
 - When: 관리자 `/admin` 진입
 - Then: `complaint_status_update` 로그 존재
 
+### TC-LOG-04 관리자 로그 조회/필터
+- Given: 관리자 로그인, `login`/`web_request` 로그가 누적된 상태
+- When: `/admin/logs?event=web_request&method=GET&q=/posts` 접근
+- Then: 조건에 맞는 로그 목록이 표시되고, 일반 사용자는 접근 차단된다
+
 ### TC-ERR-01 404 처리
 - Given: 임의 URL
 - When: `/not-found-example` 접근
 - Then: 404 응답
 
-### TC-SEC-01 OWASP 시나리오 목록 접근(관리자)
+### TC-SEC-01 OWASP Top 10:2025 시나리오 목록 접근(관리자)
 - Given: 관리자 로그인
 - When: `/security/scenarios` 접근
-- Then: A01~A10 목록 렌더링
+- Then: A01:2025~A10:2025 목록 렌더링
+- 확인 항목:
+  - A01: Broken Access Control
+  - A02: Security Misconfiguration
+  - A03: Software Supply Chain Failures (신규)
+  - A04: Cryptographic Failures
+  - A05: Injection
+  - A06: Insecure Design
+  - A07: Authentication Failures
+  - A08: Software or Data Integrity Failures
+  - A09: Security Logging and Alerting Failures
+  - A10: Mishandling of Exceptional Conditions (신규)
 
 ### TC-SEC-02 OWASP 시나리오 접근 차단(일반 사용자)
 - Given: 일반 사용자 로그인
 - When: `/security/scenarios` 접근
 - Then: 접근 거부(redirect)
+
+### TC-HEALTH-01 공공 의료 정보 페이지 접근
+- Given: 비로그인 또는 로그인 사용자
+- When: `/health-info`, `/health-centers` 접근
+- Then: 공공 의료 정보 및 지역센터 페이지 정상 렌더링
+
+### TC-HEALTH-02 지원사업 상세 접근
+- Given: 비로그인 또는 로그인 사용자
+- When: `/health-programs/vaccination` 접근
+- Then: 상세 정보 노출, 존재하지 않는 ID는 404
 
 ### TC-OPS-01 3티어 계층 기동
 - Given: Docker 환경 정상

@@ -16,6 +16,7 @@
 
 - `/`
 - `/register`, `/login`, `/profile`
+- `/health-info`, `/health-centers`, `/health-programs/{id}`
 - `/posts`, `/posts/new`, `/posts/{id}`
 - `/notices`, `/notices/{id}`
 - `/complaints`, `/complaints/new`, `/complaints/{id}`
@@ -31,12 +32,13 @@
 
 - 회원가입/로그인/로그아웃
 - 프로필 수정
-- 게시물 CRUD
+- 게시물 CRUD(분류 포함)
+- 공공 의료 정보 페이지(소식/지원사업/FAQ/지역센터)
 - 공지 생성/공개전환
 - 민원 접수/상태변경
 - 사용자 role 변경
 - 감사로그 표시
-- OWASP A01~A10 시나리오 페이지 열람(관리자)
+- OWASP Top 10:2025 시나리오 페이지 열람(관리자, A01~A10)
 
 합격 기준.
 - DB에 실제 반영

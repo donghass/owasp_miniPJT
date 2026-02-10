@@ -2,9 +2,16 @@
 {% block title %}글 작성{% endblock %}
 {% block content %}
 <div class="card" style="max-width: 820px;">
-  <p class="eyebrow">Write</p>
-  <h2>새 게시물 작성</h2>
+  <p class="eyebrow">Write Complaint Post</p>
+  <h2>민원 커뮤니티 글 작성</h2>
   <form class="form" method="post">
+    <label>분류
+      <select name="category" required>
+        {% for item in category_options %}
+        <option value="{{ item }}">{{ post_category_labels.get(item, item) }}</option>
+        {% endfor %}
+      </select>
+    </label>
     <label>제목<input name="title" required></label>
     <label>내용<textarea name="content" rows="10" required></textarea></label>
     <div class="inline-actions">

@@ -9,7 +9,9 @@
 ## 1) 현재 구현 범위
 
 - 회원가입, 로그인/로그아웃, 마이페이지
-- 게시물 CRUD
+- 마이페이지 의료 마이데이터(동의 기반 목데이터 불러오기/조회)
+- 공공 의료 정보 페이지(소식/지원사업/FAQ/지역센터)
+- 게시물 CRUD(분류 기반 민원 커뮤니티)
 - 공지사항 조회(사용자) + 등록/공개전환(관리자)
 - 민원 접수/조회(사용자) + 상태처리(관리자)
 - 관리자 페이지
@@ -17,7 +19,7 @@
   - 게시물 관리
   - 공지사항 관리
   - 민원 관리
-- 감사 로그 기록
+- 감사 로그 기록/조회(관리자 `로그 모니터링`)
 
 ## 2) 실행 방법
 
@@ -69,7 +71,8 @@ PYTHONPATH=/Users/sangwoolee/PJT2/was pytest -q
 - 테스트 케이스: `docs/TEST_CASES.md`
 - 테스트 결과: `docs/TEST_RESULTS.md`
 - DB 스키마/시드: `docs/DB_SCHEMA_AND_SEED.md`
-- OWASP 시나리오: `docs/OWASP_SCENARIOS.md`
+- OWASP Top 10:2025 시나리오: `docs/OWASP_SCENARIOS.md`
+- OWASP 2025 마이그레이션 계획: `docs/OWASP_2025_MIGRATION_PLAN.md`
 - 정책상 제한 사항: `docs/UNSUPPORTED_AND_SECURITY_NOTE.md`
 
 ## 5) 제출 전 체크

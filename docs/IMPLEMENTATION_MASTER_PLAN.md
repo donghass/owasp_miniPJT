@@ -8,7 +8,8 @@
 - 아키텍처: 3티어 (`web`/`was`/`db`)
 - 필수 기능:
   - 인증/계정
-  - 게시판 CRUD
+  - 게시판 CRUD(분류 기반)
+  - 공공 의료 정보 페이지(소식/지원사업/지역센터/FAQ)
   - 공지사항(사용자 조회 + 관리자 관리)
   - 민원(사용자 접수 + 관리자 상태처리)
   - 관리자 페이지(사용자/게시물/공지/민원)
@@ -44,7 +45,8 @@ Out of Scope.
   - `docs/FEATURE_MATRIX.md`
   - `docs/API_SPEC.md`
   - `docs/TEST_CASES.md`
-  - `docs/OWASP_SCENARIOS.md`
+  - `docs/OWASP_SCENARIOS.md` (OWASP Top 10:2025)
+  - `docs/OWASP_2025_MIGRATION_PLAN.md`
   - `docs/TEST_RESULTS.md`
   - `docs/SERVICE_COMPLETION_PLAN.md`
   - `docs/DB_SCHEMA_AND_SEED.md`

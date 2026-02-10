@@ -31,6 +31,9 @@ HTTP_CODE() {
 
 ROOT_CODE=$(HTTP_CODE "$BASE_URL/")
 POSTS_CODE=$(HTTP_CODE "$BASE_URL/posts")
+HEALTH_INFO_CODE=$(HTTP_CODE "$BASE_URL/health-info")
+HEALTH_CENTERS_CODE=$(HTTP_CODE "$BASE_URL/health-centers")
+HEALTH_PROGRAM_CODE=$(HTTP_CODE "$BASE_URL/health-programs/vaccination")
 
 rm -f /tmp/pjt2_user.cookies /tmp/pjt2_admin.cookies
 USER_LOGIN_CODE=$(curl -s -c /tmp/pjt2_user.cookies -b /tmp/pjt2_user.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' \
@@ -41,6 +44,7 @@ USER_PRIVATE_NOTICE_CODE=$(curl -s -b /tmp/pjt2_user.cookies -o /tmp/pjt2_report
 ADMIN_LOGIN_CODE=$(curl -s -c /tmp/pjt2_admin.cookies -b /tmp/pjt2_admin.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' \
   -X POST "$BASE_URL/login" -d 'username=admin&password=admin1234')
 ADMIN_ADMIN_CODE=$(curl -s -b /tmp/pjt2_admin.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' "$BASE_URL/admin")
+ADMIN_LOGS_CODE=$(curl -s -b /tmp/pjt2_admin.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' "$BASE_URL/admin/logs")
 ADMIN_PRIVATE_NOTICE_CODE=$(curl -s -b /tmp/pjt2_admin.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' "$BASE_URL/notices/2")
 ADMIN_SCENARIO_CODE=$(curl -s -b /tmp/pjt2_admin.cookies -o /tmp/pjt2_report_body.$$ -w '%{http_code}' "$BASE_URL/security/scenarios")
 
@@ -48,11 +52,15 @@ SMOKE_PASS="PASS"
 for expected_pair in \
   "ROOT_CODE:200" \
   "POSTS_CODE:200" \
+  "HEALTH_INFO_CODE:200" \
+  "HEALTH_CENTERS_CODE:200" \
+  "HEALTH_PROGRAM_CODE:200" \
   "USER_LOGIN_CODE:302" \
   "USER_ADMIN_CODE:302" \
   "USER_PRIVATE_NOTICE_CODE:302" \
   "ADMIN_LOGIN_CODE:302" \
   "ADMIN_ADMIN_CODE:200" \
+  "ADMIN_LOGS_CODE:200" \
   "ADMIN_PRIVATE_NOTICE_CODE:200" \
   "ADMIN_SCENARIO_CODE:200"; do
   key="${expected_pair%%:*}"
@@ -70,6 +78,7 @@ SELECT CONCAT('posts=', COUNT(*)) FROM post;\
 SELECT CONCAT('notices=', COUNT(*)) FROM notice;\
 SELECT CONCAT('complaints=', COUNT(*)) FROM complaint;\
 SELECT CONCAT('logs=', COUNT(*)) FROM audit_log;\
+SELECT CONCAT('mydata=', COUNT(*)) FROM my_data_snapshot;\
 " 2>/dev/null)
 
 SERVICES=$(docker compose -f "$ROOT/docker-compose.yml" ps --format json)
@@ -103,11 +112,15 @@ $PYTEST_RAW
 |---|---:|
 | GET / | $ROOT_CODE |
 | GET /posts | $POSTS_CODE |
+| GET /health-info | $HEALTH_INFO_CODE |
+| GET /health-centers | $HEALTH_CENTERS_CODE |
+| GET /health-programs/vaccination | $HEALTH_PROGRAM_CODE |
 | POST /login (user1) | $USER_LOGIN_CODE |
 | GET /admin (user1) | $USER_ADMIN_CODE |
 | GET /notices/2 private (user1) | $USER_PRIVATE_NOTICE_CODE |
 | POST /login (admin) | $ADMIN_LOGIN_CODE |
 | GET /admin (admin) | $ADMIN_ADMIN_CODE |
+| GET /admin/logs (admin) | $ADMIN_LOGS_CODE |
 | GET /notices/2 private (admin) | $ADMIN_PRIVATE_NOTICE_CODE |
 | GET /security/scenarios (admin) | $ADMIN_SCENARIO_CODE |
 

@@ -21,7 +21,7 @@
     <select name="category" style="max-width: 150px; margin-top: 0;">
       <option value="all" {% if category_filter == 'all' %}selected{% endif %}>전체 카테고리</option>
       {% for category in category_options %}
-      <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ category }}</option>
+      <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ complaint_category_labels.get(category, category) }}</option>
       {% endfor %}
     </select>
     <button type="submit">검색</button>
@@ -37,7 +37,7 @@
           <td>{{ c.id }}</td>
           <td class="text-wrap">{{ c.title }}</td>
           <td>{{ c.requester.username }}</td>
-          <td>{{ c.category }}</td>
+          <td>{{ complaint_category_labels.get(c.category, c.category) }}</td>
           <td><span class="badge badge-{{ c.status }}">{{ c.status }}</span></td>
           <td><a class="btn btn-subtle" href="{{ url_for('complaints_detail', complaint_id=c.id) }}">열기</a></td>
         </tr>

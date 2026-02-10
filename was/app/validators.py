@@ -4,8 +4,25 @@ import re
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,50}$")
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 ROLE_SET = {"user", "admin"}
-COMPLAINT_CATEGORY_SET = {"general", "medical", "privacy", "billing"}
+COMPLAINT_CATEGORY_SET = {
+    "general",
+    "medical",
+    "privacy",
+    "billing",
+    "facility_access",
+    "vaccination",
+    "digital_service",
+}
 COMPLAINT_STATUS_SET = {"received", "in_review", "resolved", "rejected"}
+POST_CATEGORY_SET = {
+    "general",
+    "medical_service",
+    "insurance_billing",
+    "privacy_records",
+    "facility_access",
+    "vaccination",
+    "digital_service",
+}
 
 
 def _required(value):
@@ -82,4 +99,10 @@ def validate_complaint_category(category):
 def validate_complaint_status(status):
     if status not in COMPLAINT_STATUS_SET:
         return ["민원 상태 값이 올바르지 않습니다."]
+    return []
+
+
+def validate_post_category(category):
+    if category not in POST_CATEGORY_SET:
+        return ["게시판 분류 값이 올바르지 않습니다."]
     return []
