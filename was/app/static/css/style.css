@@ -321,7 +321,7 @@ button:hover {
 }
 
 .btn-outline {
-  background: transparent;
+  background: #fff;
   color: var(--brand);
   border: 1px solid var(--brand);
 }
