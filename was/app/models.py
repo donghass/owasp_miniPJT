@@ -17,6 +17,11 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    profile_image_name = db.Column(db.String(255), nullable=True)
+    required_terms_agreed = db.Column(db.Boolean, default=False, nullable=False)
+    required_terms_agreed_at = db.Column(db.DateTime, nullable=True)
+    optional_terms_agreed = db.Column(db.Boolean, default=False, nullable=False)
+    optional_terms_agreed_at = db.Column(db.DateTime, nullable=True)
     role = db.Column(db.String(20), default="user", nullable=False)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
@@ -61,6 +66,12 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    attachments = db.relationship(
+        "PostAttachment",
+        backref="post",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
 
 
 class Notice(db.Model):
@@ -103,4 +114,14 @@ class MyDataSnapshot(db.Model):
     consent_at = db.Column(db.DateTime, nullable=True)
     payload_json = db.Column(db.Text, nullable=False)
     fetched_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+
+
+class PostAttachment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False, index=True)
+    original_name = db.Column(db.String(255), nullable=False)
+    stored_name = db.Column(db.String(255), nullable=False, unique=True)
+    mime_type = db.Column(db.String(120), nullable=True)
+    file_size = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
